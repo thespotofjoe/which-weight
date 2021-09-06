@@ -18,6 +18,14 @@ struct ContentView: View {
     @State var canUse25 = true
     @State var canUse45 = true
     
+    var weightsToUse = [0, 3, 0, 5, 0]
+    let weightStrings = ["2.5", "5", "10", "25", "45"]
+    
+    // Returns array with booleans telling program which weights are good to use or not
+    func getPossibleWeights() -> [Bool]
+    {
+        return [canUse2_5, canUse5, canUse10, canUse25, canUse45]
+    }
     
     // Returns a String with the value of weight to put on each side of the barbell
     func eachSide() -> String
@@ -37,8 +45,6 @@ struct ContentView: View {
         // If we have a decimal, it'll be .5... return string with 1 decimal place
         return String(format: "%.1f", eachSide)
     }
-    
-    var weightsToUse = ["2.5":0, "5":0, "10":0, "25":0, "45":0]
     
     var body: some View {
         VStack{
@@ -67,9 +73,13 @@ struct ContentView: View {
                 HStack {
                     Text("Made of:")
                     VStack {
-                        Text("Y * XX lbs")
-                        Text("Y * XX lbs")
-                        Text("Y * XX lbs")
+                        ForEach(0..<weightsToUse.count)
+                        {
+                            if weightsToUse[$0] != 0
+                            {
+                                Text("\(weightsToUse[$0]) * \(weightStrings[$0]) lbs")
+                            }
+                        }
                     }
                 }.padding()
             }.padding()
