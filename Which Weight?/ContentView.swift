@@ -7,28 +7,18 @@
 
 import SwiftUI
 
-extension Binding {
-    func onChange(_ handler: @escaping (Value) -> Void) -> Binding<Value> {
-        Binding(
-            get: { self.wrappedValue },
-            set: { newValue in
-                self.wrappedValue = newValue
-                handler(newValue)
-            }
-        )
-    }
-}
-
-struct ContentView: View {
+struct ContentView: View
+{
+    @State private var showingSheet = false
     
     @State var barWeight = 45
     @State var targetWeight = 200
     
-    @State var canUse2_5 = true
+    /*@State var canUse2_5 = true
     @State var canUse5 = true
     @State var canUse10 = true
     @State var canUse25 = true
-    @State var canUse45 = true
+    @State var canUse45 = true*/
     
     @State var weightsToUse = [2.5:0, 5.0:0, 10.0:0, 25.0:0, 45.0:0]
     
@@ -67,11 +57,47 @@ struct ContentView: View {
         return
     }
     
-    // Returns array with booleans telling program which weights are good to use or not
+    /*// Returns array with booleans telling program which weights are good to use or not
     func getPossibleWeightsArray() -> [Bool]
     {
         return [canUse2_5, canUse5, canUse10, canUse25, canUse45]
+    }*/
+    
+    var body: some View
+    {
+        VStack{
+            HStack {
+                Stepper("The bar is \(barWeight) lbs", value: $barWeight, in: 0...100, step: 5)
+                
+            }.padding()
+            
+            HStack {
+                Stepper("My target is \(targetWeight) lbs", value: $targetWeight, in: 0...1000, step: 5)
+                
+            }.padding()
+            
+            /*VStack {
+                Text("Weights You Have Access To:")
+                Toggle("2.5 lbs", isOn: $canUse2_5)
+                Toggle("5 lbs", isOn: $canUse5)
+                Toggle("10 lbs", isOn: $canUse10)
+                Toggle("25 lbs", isOn: $canUse25)
+                Toggle("45 lbs", isOn: $canUse45)
+            }.padding()*/
+            
+            VStack{
+                Button("Show Weights") {updateEachSide(); calculateWeights(); showingSheet.toggle()}
+                    .sheet(isPresented: $showingSheet) { SheetView(eachSide: eachSide, weights: weights, weightsToUse: weightsToUse) }
+            }.padding()
+        }
     }
+}
+
+struct SheetView: View
+{
+    let eachSide: Double
+    let weights: [Double]
+    let weightsToUse: [Double:Int]
     
     // Formats a Double to be nice to read... cuts off extraneous 0's after the decimal
     func formatWeightDouble(_ weight: Double) -> String
@@ -89,45 +115,21 @@ struct ContentView: View {
         return String(format: "%.1f", weight)
     }
     
-    var body: some View {
-        VStack{
-            HStack {
-                Stepper("The bar is \(barWeight) lbs", value: $barWeight, in: 0...100, step: 5)
-                
-            }.padding()
-            
-            HStack {
-                Stepper("My target is \(targetWeight) lbs", value: $targetWeight, in: 0...1000, step: 5)
-                
-            }.padding()
-            
+    var body: some View
+    {
+        Text("Each Side: \(formatWeightDouble(eachSide)) lbs")
+        HStack {
+            Text("Made of:")
             VStack {
-                Text("Weights You Have Access To:")
-                Toggle("2.5 lbs", isOn: $canUse2_5)
-                Toggle("5 lbs", isOn: $canUse5)
-                Toggle("10 lbs", isOn: $canUse10)
-                Toggle("25 lbs", isOn: $canUse25)
-                Toggle("45 lbs", isOn: $canUse45)
-            }.padding()
-            
-            VStack{
-                Text("Solution:")
-                Button(action: {updateEachSide();calculateWeights()}, label: {Text("Update")})
-                Text("Each Side: \(formatWeightDouble(eachSide)) lbs")
-                HStack {
-                    Text("Made of:")
-                    VStack {
-                        ForEach(weights, id: \.self)
-                        {
-                            if weightsToUse[$0] != 0
-                            {
-                                Text("\(weightsToUse[$0]!) * \(formatWeightDouble($0)) lbs")
-                            }
-                        }
+                ForEach(weights, id: \.self)
+                {
+                    if weightsToUse[$0] != 0
+                    {
+                        Text("\(weightsToUse[$0]!) * \(formatWeightDouble($0)) lbs")
                     }
-                }.padding()
-            }.padding()
-        }
+                }
+            }
+        }.padding()
     }
 }
 
