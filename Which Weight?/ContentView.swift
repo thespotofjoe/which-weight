@@ -7,6 +7,18 @@
 
 import SwiftUI
 
+extension Binding {
+    func onChange(_ handler: @escaping (Value) -> Void) -> Binding<Value> {
+        Binding(
+            get: { self.wrappedValue },
+            set: { newValue in
+                self.wrappedValue = newValue
+                handler(newValue)
+            }
+        )
+    }
+}
+
 struct ContentView: View {
     
     @State var barWeight = 45
@@ -18,32 +30,63 @@ struct ContentView: View {
     @State var canUse25 = true
     @State var canUse45 = true
     
-    var weightsToUse = [0, 3, 0, 5, 0]
-    let weightStrings = ["2.5", "5", "10", "25", "45"]
+    @State var weightsToUse = [2.5:0, 5.0:0, 10.0:0, 25.0:0, 45.0:0]
+    
+    @State var eachSide = 0.0
+    
+    let weights = [2.5, 5.0, 10.0, 25.0, 45.0]
+    
+    // Calculates how much weight to put on each side
+    func updateEachSide()
+    {
+        eachSide = Double(targetWeight - barWeight) / 2.0
+        return
+    }
+    
+    // Calculates the weights needed for each level of disk weight available and stores it in self.weightsToUse[]
+    func calculateWeights()
+    {
+        weightsToUse = [2.5:0, 5.0:0, 10.0:0, 25.0:0, 45.0:0]
+        
+        var weightLeftToAllocate = eachSide
+       
+        for weight in weights.reversed()
+        {
+            if weightLeftToAllocate <= 0
+            {
+                break
+            }
+            if weightLeftToAllocate >= weight
+            {
+                let howMany = Int(weightLeftToAllocate / weight)
+                weightLeftToAllocate -= weight * Double(howMany)
+                weightsToUse[weight] = howMany
+            }
+        }
+        
+        return
+    }
     
     // Returns array with booleans telling program which weights are good to use or not
-    func getPossibleWeights() -> [Bool]
+    func getPossibleWeightsArray() -> [Bool]
     {
         return [canUse2_5, canUse5, canUse10, canUse25, canUse45]
     }
     
-    // Returns a String with the value of weight to put on each side of the barbell
-    func eachSide() -> String
+    // Formats a Double to be nice to read... cuts off extraneous 0's after the decimal
+    func formatWeightDouble(_ weight: Double) -> String
     {
-        // Calculate the weight on each side of the barbell
-        let eachSide = (Double(targetWeight) - Double(barWeight))/2.0
-        
         // Get the value after the decimal point
-        let decimal = eachSide - floor(eachSide)
+        let decimal = weight - floor(weight)
         
         // If we have an integer, format with no deicmal
         if decimal == 0
         {
-            return String(format: "%.0f", eachSide)
+            return String(format: "%.0f", weight)
         }
         
         // If we have a decimal, it'll be .5... return string with 1 decimal place
-        return String(format: "%.1f", eachSide)
+        return String(format: "%.1f", weight)
     }
     
     var body: some View {
@@ -59,7 +102,7 @@ struct ContentView: View {
             }.padding()
             
             VStack {
-                Text("Weights You Can Use:")
+                Text("Weights You Have Access To:")
                 Toggle("2.5 lbs", isOn: $canUse2_5)
                 Toggle("5 lbs", isOn: $canUse5)
                 Toggle("10 lbs", isOn: $canUse10)
@@ -69,15 +112,16 @@ struct ContentView: View {
             
             VStack{
                 Text("Solution:")
-                Text("Each Side: \(eachSide()) lbs")
+                Button(action: {updateEachSide();calculateWeights()}, label: {Text("Update")})
+                Text("Each Side: \(formatWeightDouble(eachSide)) lbs")
                 HStack {
                     Text("Made of:")
                     VStack {
-                        ForEach(0..<weightsToUse.count)
+                        ForEach(weights, id: \.self)
                         {
                             if weightsToUse[$0] != 0
                             {
-                                Text("\(weightsToUse[$0]) * \(weightStrings[$0]) lbs")
+                                Text("\(weightsToUse[$0]!) * \(formatWeightDouble($0)) lbs")
                             }
                         }
                     }
