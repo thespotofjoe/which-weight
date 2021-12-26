@@ -12,7 +12,7 @@ struct ContentView: View
     @State private var showingSheet = false
     
     @State var barWeight = 45
-    @State var targetWeight = 200
+    @State var targetWeight = 225
     
     /*@State var canUse2_5 = true
     @State var canUse5 = true
@@ -20,9 +20,9 @@ struct ContentView: View
     @State var canUse25 = true
     @State var canUse45 = true*/
     
-    @State var weightsToUse = [2.5:0, 5.0:0, 10.0:0, 25.0:0, 45.0:0]
+    @State var weightsToUse = [2.5:0, 5.0:0, 10.0:0, 25.0:0, 45.0:2]
     
-    @State var eachSide = 0.0
+    @State var eachSide = 90.0
     
     let weights = [2.5, 5.0, 10.0, 25.0, 45.0]
     
@@ -65,35 +65,53 @@ struct ContentView: View
     
     var body: some View
     {
-        VStack{
-            Text("Calculate which plates to use during your workout:")
-                .fontWeight(.bold)
-                .padding()
-            
-            HStack {
-                Stepper("The bar is \(barWeight) lbs", value: $barWeight, in: 0...100, step: 5)
-                
-            }.padding()
-            
-            HStack {
-                Stepper("My target is \(targetWeight) lbs", value: $targetWeight, in: 0...1000, step: 5)
-                
-            }.padding()
-            
-            // Future feature
-            /*VStack {
-                Text("Weights You Have Access To:")
-                Toggle("2.5 lbs", isOn: $canUse2_5)
-                Toggle("5 lbs", isOn: $canUse5)
-                Toggle("10 lbs", isOn: $canUse10)
-                Toggle("25 lbs", isOn: $canUse25)
-                Toggle("45 lbs", isOn: $canUse45)
-            }.padding()*/
-            
+        ZStack
+        {
+            bgGradient()
             VStack{
-                Button("Show plates to use") {updateEachSide(); calculateWeights(); showingSheet.toggle()}
-                    .sheet(isPresented: $showingSheet) { SheetView(eachSide: eachSide, weights: weights, weightsToUse: weightsToUse) }
-            }.padding()
+                Text("Calculate which plates to use during your workout:")
+                    .foregroundColor(.white)
+                    .fontWeight(.bold)
+                    .padding()
+                
+                HStack {
+                    Stepper("The bar is \(barWeight) lbs", value: $barWeight, in: 0...100, step: 5, onEditingChanged:
+                            {_ in
+                                updateEachSide();
+                                calculateWeights();
+                            })
+                        .foregroundColor(.white)
+                    
+                }.padding()
+                
+                HStack {
+                    Stepper("My target is \(targetWeight) lbs", value: $targetWeight, in: 0...1000, step: 5, onEditingChanged:
+                            {_ in
+                                updateEachSide();
+                                calculateWeights();
+                            })
+                        .foregroundColor(.white)
+                    
+                }.padding()
+                
+                // Future feature
+                /*VStack {
+                    Text("Weights You Have Access To:")
+                    Toggle("2.5 lbs", isOn: $canUse2_5)
+                    Toggle("5 lbs", isOn: $canUse5)
+                    Toggle("10 lbs", isOn: $canUse10)
+                    Toggle("25 lbs", isOn: $canUse25)
+                    Toggle("45 lbs", isOn: $canUse45)
+                }.padding()*/
+                
+                Spacer()
+                
+                
+                button(text: "Show plates to use") {showingSheet.toggle()}
+                .sheet(isPresented: $showingSheet) { SheetView(eachSide: eachSide, weights: weights, weightsToUse: weightsToUse) }
+                .padding()
+                
+            }
         }
     }
 }
@@ -138,6 +156,30 @@ struct SheetView: View
         }.padding()
         Text("Swipe down to dismiss.")
     }
+}
+
+// Nice looking button
+fileprivate func button(text: String, width widthInt: Int = 280, _ action: @escaping ()->() = {}) -> some View
+{
+    let width = CGFloat(widthInt)
+    
+    return Button
+    {
+        action()
+    } label: {
+        Text(text)
+            .frame(width: width, height: 40, alignment: .center)
+            .background(.white)
+            .cornerRadius(30)
+            .foregroundColor(.black)
+    }
+}
+
+// Nice looking background gradient
+fileprivate func bgGradient(_ color1: Color = .gray, _ color2: Color = .black) -> some View
+{
+    return LinearGradient(colors: [color1, color2], startPoint: .topTrailing, endPoint: .bottomLeading)
+    .ignoresSafeArea()
 }
 
 struct ContentView_Previews: PreviewProvider {
