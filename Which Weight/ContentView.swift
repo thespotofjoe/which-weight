@@ -57,7 +57,7 @@ struct ContentView: View
         return
     }
     
-    /*// Returns array with booleans telling program which weights are good to use or not
+    /*// Future feature - Returns array with booleans telling program which weights are good to use or not.
     func getPossibleWeightsArray() -> [Bool]
     {
         return [canUse2_5, canUse5, canUse10, canUse25, canUse45]
@@ -66,6 +66,10 @@ struct ContentView: View
     var body: some View
     {
         VStack{
+            Text("Calculate which plates to use during your workout:")
+                .fontWeight(.bold)
+                .padding()
+            
             HStack {
                 Stepper("The bar is \(barWeight) lbs", value: $barWeight, in: 0...100, step: 5)
                 
@@ -76,6 +80,7 @@ struct ContentView: View
                 
             }.padding()
             
+            // Future feature
             /*VStack {
                 Text("Weights You Have Access To:")
                 Toggle("2.5 lbs", isOn: $canUse2_5)
@@ -86,13 +91,14 @@ struct ContentView: View
             }.padding()*/
             
             VStack{
-                Button("Show Weights") {updateEachSide(); calculateWeights(); showingSheet.toggle()}
+                Button("Show plates to use") {updateEachSide(); calculateWeights(); showingSheet.toggle()}
                     .sheet(isPresented: $showingSheet) { SheetView(eachSide: eachSide, weights: weights, weightsToUse: weightsToUse) }
             }.padding()
         }
     }
 }
 
+// View that pops up with the solution
 struct SheetView: View
 {
     let eachSide: Double
@@ -130,6 +136,7 @@ struct SheetView: View
                 }
             }
         }.padding()
+        Text("Swipe down to dismiss.")
     }
 }
 

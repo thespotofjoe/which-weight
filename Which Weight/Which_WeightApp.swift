@@ -1,14 +1,14 @@
 //
-//  Which_Weight_App.swift
-//  Which Weight?
+//  Which_WeightApp.swift
+//  Which Weight
 //
-//  Created by Joe on 9/6/21.
+//  Created by Joe Buchoff on 12/26/21.
 //
 
 import SwiftUI
 
 @main
-struct Which_Weight_App: App {
+struct Which_WeightApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
