@@ -10,9 +10,10 @@ import SwiftUI
 struct ContentView: View
 {
     @State private var showingSheet = false
+    @State private var twoSides = true
     
     @State var barWeight = 45
-    @State var targetWeight = 225
+    @State var targetWeight = 45
     
     /*@State var canUse2_5 = true
     @State var canUse5 = true
@@ -20,16 +21,17 @@ struct ContentView: View
     @State var canUse25 = true
     @State var canUse45 = true*/
     
-    @State var weightsToUse = [2.5:0, 5.0:0, 10.0:0, 25.0:0, 45.0:2]
-    
-    @State var eachSide = 90.0
+    @State var weightsToUse = [2.5:0, 5.0:0, 10.0:0, 25.0:0, 45.0:0]
+    @State var eachSide: Double = 0.0
     
     let weights = [2.5, 5.0, 10.0, 25.0, 45.0]
     
     // Calculates how much weight to put on each side
     func updateEachSide()
     {
-        eachSide = Double(targetWeight - barWeight) / 2.0
+        print("Updating eachSide. twoSides is \(twoSides). eachSide is (before) \(eachSide)")
+        eachSide = Double(targetWeight - barWeight) / (twoSides ? 2.0 : 1.0)
+        print("eachSide is (after) \(eachSide)")
         return
     }
     
@@ -57,6 +59,23 @@ struct ContentView: View
         return
     }
     
+    // Formats a Double to be nice to read... cuts off extraneous 0's after the decimal
+    func formatWeightDouble(_ weight: Double) -> String
+    {
+        // Get the value after the decimal point
+        let decimal = weight - floor(weight)
+        
+        // If we have an integer, format with no deicmal
+        if decimal == 0
+        {
+            return String(format: "%.0f", weight)
+        }
+        
+        // If we have a decimal, it'll be .5... return string with 1 decimal place
+        return String(format: "%.1f", weight)
+    }
+
+    
     /*// Future feature - Returns array with booleans telling program which weights are good to use or not.
     func getPossibleWeightsArray() -> [Bool]
     {
@@ -74,8 +93,30 @@ struct ContentView: View
                     .fontWeight(.bold)
                     .padding()
                 
+                VStack{
+                    Toggle(isOn: $twoSides){
+                        Text("Are we dividing the weight into one side or two? (e.g. a sled or a barbell)")
+                        .onChange(of: twoSides)
+                        {_ in
+                            updateEachSide();
+                            calculateWeights();
+                        }
+                        .foregroundColor(Color.white)
+                    }
+                
+                    if twoSides
+                    {
+                        Text("Two Sides")
+                            .foregroundColor(Color.white)
+                    } else {
+                        Text("One Side")
+                            .foregroundColor(Color.white)
+                    }
+                }
+                .padding()
+                
                 HStack {
-                    Stepper("The bar is \(barWeight) lbs", value: $barWeight, in: 0...100, step: 5, onEditingChanged:
+                    Stepper("The bar/sled is \(barWeight) lbs", value: $barWeight, in: 0...100, step: 5, onEditingChanged:
                             {_ in
                                 updateEachSide();
                                 calculateWeights();
@@ -107,8 +148,13 @@ struct ContentView: View
                 Spacer()
                 
                 
-                button(text: "Show plates to use") {showingSheet.toggle()}
-                .sheet(isPresented: $showingSheet) { SheetView(eachSide: eachSide, weights: weights, weightsToUse: weightsToUse) }
+                button(text: "Show plates to use") {updateEachSide();
+                    calculateWeights();
+                    showingSheet.toggle();
+                    print("About to present sheet! eachSide: \(eachSide)");}
+                .sheet(isPresented: $showingSheet) {
+                        SheetView(eachSide: eachSide, weights: weights, weightsToUse: weightsToUse, twoSides: twoSides)
+                    }
                 .padding()
                 
             }
@@ -116,12 +162,14 @@ struct ContentView: View
     }
 }
 
+
 // View that pops up with the solution
 struct SheetView: View
 {
     let eachSide: Double
     let weights: [Double]
     let weightsToUse: [Double:Int]
+    let twoSides: Bool
     
     // Formats a Double to be nice to read... cuts off extraneous 0's after the decimal
     func formatWeightDouble(_ weight: Double) -> String
@@ -141,15 +189,23 @@ struct SheetView: View
     
     var body: some View
     {
-        Text("Each Side: \(formatWeightDouble(eachSide)) lbs")
+        if twoSides
+        {
+            Text("Each Side: \(formatWeightDouble(eachSide)) lbs")
+        } else {
+            Text("Weight in addition to the bar/sled: \(formatWeightDouble(eachSide)) lbs")
+        }
         HStack {
             Text("Made of:")
+                .font(.title)
+            
             VStack {
                 ForEach(weights, id: \.self)
                 {
                     if weightsToUse[$0] != 0
                     {
                         Text("\(weightsToUse[$0]!) * \(formatWeightDouble($0)) lbs")
+                            .font(.title)
                     }
                 }
             }
